@@ -43,8 +43,8 @@ class Binner(object):
 			stop  = start + self.delta_ell
 			self.lmax = stop[-1]
 
-		else:
-			self.bin_edges = bin_edges
+		else: 
+			self.bin_edges = np.asarray(bin_edges)
 			self.lmin      = int(bin_edges[0])
 			self.lmax      = int(bin_edges[-1])
 			self.delta_ell = bin_edges[1:] - bin_edges[:-1]
@@ -174,7 +174,7 @@ class Master(Binner):
 			self.K_bb_inv = K_bb_inv
 
 		else:  # f_sky approximation
-			self.weight = np.ones(lmax+1)
+			self.weight = np.ones(self.lmax+1)
 			if pixwin:
 				self.weight *= self.pw2_l
 			if fwhm_smooth is not None:
