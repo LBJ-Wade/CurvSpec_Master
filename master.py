@@ -1,6 +1,6 @@
 import numpy as np
 import healpy as hp
-from numpy import linalg as la
+import scipy.linalg as la
 from mll import mll
 
 __all__ = ['Binner', 'Master']
@@ -45,9 +45,9 @@ class Binner(object):
 
 		else: 
 			self.bin_edges = np.asarray(bin_edges)
-			self.lmin      = int(bin_edges[0])
-			self.lmax      = int(bin_edges[-1])
-			self.delta_ell = bin_edges[1:] - bin_edges[:-1]
+			self.lmin      = int(self.bin_edges[0])
+			self.lmax      = int(self.bin_edges[-1])
+			self.delta_ell = self.bin_edges[1:] - self.bin_edges[:-1]
 			
 			nbins = len(self.delta_ell)
 			start = np.floor(self.bin_edges[:-1])
@@ -69,8 +69,8 @@ class Binner(object):
 
 		for b, (a, z) in enumerate(zip(start, stop)):
 			a = int(a); z = int(z)
-			self.P_bl[b, a:z] = 1. * flat_[a:z] / (z - a)
-			self.Q_lb[a:z, b] = 1. / flat_[a:z]
+			self.P_bl[b, a:z] = np.nan_to_num( 1. * flat_[a:z] / (z - a) )
+			self.Q_lb[a:z, b] = np.nan_to_num( 1. / flat_[a:z] )
 
 	def bin_spectra(self, spectra):
 		"""
@@ -173,10 +173,10 @@ class Master(Binner):
 			self.K_ll = K_ll
 			self.K_bb = np.dot(np.dot(self.P_bl, self.K_ll), self.Q_lb)
 			try:
-				K_bb_inv = la.inv(self.K_bb)
+				K_bb_inv = la.pinv2(self.K_bb)
 			except:
 				print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-				K_bb_inv = la.inv(self.K_bb + np.eye(self.K_bb.shape[0])*self.eps)
+				K_bb_inv = la.pinv2(self.K_bb + np.eye(self.K_bb.shape[0])*self.eps)
 
 			self.K_bb_inv = K_bb_inv
 
@@ -299,19 +299,19 @@ class Master(Binner):
 					K_bb_2 = np.dot(np.dot(self.P_bl, K_ll_2), self.Q_lb)
 
 					try:
-						K_bb_inv_1 = la.inv(K_bb_1)
+						K_bb_inv_1 = la.pinv2(K_bb_1)
 					except:
 						print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-						K_bb_inv_1 = la.inv(K_bb_1 + np.eye(K_bb_1.shape[0])*self.eps)
+						K_bb_inv_1 = la.pinv2(K_bb_1 + np.eye(K_bb_1.shape[0])*self.eps)
 
 					try:
-						K_bb_inv_2 = la.inv(K_bb_2)
+						K_bb_inv_2 = la.pinv2(K_bb_2)
 					except:
 						print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-						K_bb_inv_2 = la.inv(K_bb_2 + np.eye(K_bb_2.shape[0])*self.eps)
+						K_bb_inv_2 = la.pinv2(K_bb_2 + np.eye(K_bb_2.shape[0])*self.eps)
 
-					# K_bb_inv_1  = la.inv(K_bb_1)
-					# K_bb_inv_2  = la.inv(K_bb_2)
+					# K_bb_inv_1  = la.pinv2(K_bb_1)
+					# K_bb_inv_2  = la.pinv2(K_bb_2)
 
 					cl1 = np.dot(K_bb_inv_1, np.dot(self.P_bl, pcl_1))
 					cl2 = np.dot(K_bb_inv_2, np.dot(self.P_bl, pcl_2))
