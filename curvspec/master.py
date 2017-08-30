@@ -147,6 +147,7 @@ class Master(Binner):
 				self.B2_ll = np.diag(self.B2_l)
 			else:
 				self.B_1_l = hp.gauss_beam(fwhm_smooth * arcmin2rad, lmax=self.lmax)
+				self.B_2_l = self.B_1_l.copy()
 				self.B2_l  = self.B_1_l**2
 				self.B2_ll = np.diag(self.B2_l)
 
@@ -325,8 +326,8 @@ class Master(Binner):
 						weight_1 *= self.pw2_l
 						weight_2 *= self.pw2_l
 					if self.fwhm_smooth is not None:
-						weight_1 *= B2_1_ll
-						weight_2 *= B2_2_ll
+						weight_1 *= np.diag(B2_1_ll)
+						weight_2 *= np.diag(B2_2_ll)
 
 					cl1 = np.dot(self.P_bl, pcl_1/weight_1) / self.fsky
 					cl2 = np.dot(self.P_bl, pcl_2/weight_2) / self.fsky
