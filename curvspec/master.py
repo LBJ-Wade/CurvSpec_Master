@@ -42,6 +42,7 @@ class Binner(object):
 			start = self.lmin + np.arange(nbins) * self.delta_ell
 			stop  = start + self.delta_ell
 			self.lmax = stop[-1]
+			self.bin_edges = np.append(start, stop[-1])
 
 		else: 
 			self.bin_edges = np.asarray(bin_edges)
