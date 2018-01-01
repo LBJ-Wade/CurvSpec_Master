@@ -103,7 +103,7 @@ class Master(Binner):
 	"""
 
 	def __init__(self, mask, bin_edges=None, lmin=2, lmax=500, delta_ell=50, flat=None, 
-				 pixwin=True, fwhm_smooth=None, transfer=None, MASTER=False):
+				 pixwin=True, fwhm_smooth=None, transfer=None, MASTER=False, inv_routine=la.inv):
 		"""
 		Parameters
 		----------
@@ -129,6 +129,7 @@ class Master(Binner):
 		self.nside       = hp.npix2nside(mask.size)
 		self.fwhm_smooth = fwhm_smooth
 		self.MASTER      = MASTER
+		self.inv_routine = inv_routine
 
 		self.eps = 1e-6 # Conditioning param: HARDCODED !
 
@@ -175,10 +176,10 @@ class Master(Binner):
 			self.K_ll = K_ll
 			self.K_bb = np.dot(np.dot(self.P_bl, self.K_ll), self.Q_lb)
 			try:
-				K_bb_inv = la.pinv2(self.K_bb)
+				K_bb_inv = self.inv_routine(self.K_bb)
 			except:
 				print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-				K_bb_inv = la.pinv2(self.K_bb + np.eye(self.K_bb.shape[0])*self.eps)
+				K_bb_inv = self.inv_routine(self.K_bb + np.eye(self.K_bb.shape[0])*self.eps)
 
 			self.K_bb_inv = K_bb_inv
 
@@ -301,19 +302,19 @@ class Master(Binner):
 					K_bb_2 = np.dot(np.dot(self.P_bl, K_ll_2), self.Q_lb)
 
 					try:
-						K_bb_inv_1 = la.pinv2(K_bb_1)
+						K_bb_inv_1 = self.inv_routine(K_bb_1)
 					except:
 						print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-						K_bb_inv_1 = la.pinv2(K_bb_1 + np.eye(K_bb_1.shape[0])*self.eps)
+						K_bb_inv_1 = self.inv_routine(K_bb_1 + np.eye(K_bb_1.shape[0])*self.eps)
 
 					try:
-						K_bb_inv_2 = la.pinv2(K_bb_2)
+						K_bb_inv_2 = self.inv_routine(K_bb_2)
 					except:
 						print("\t! Problem with Coupling Matrix inversion: let me try a little trick ! ")
-						K_bb_inv_2 = la.pinv2(K_bb_2 + np.eye(K_bb_2.shape[0])*self.eps)
+						K_bb_inv_2 = self.inv_routine(K_bb_2 + np.eye(K_bb_2.shape[0])*self.eps)
 
-					# K_bb_inv_1  = la.pinv2(K_bb_1)
-					# K_bb_inv_2  = la.pinv2(K_bb_2)
+					# K_bb_inv_1  = self.inv_routine(K_bb_1)
+					# K_bb_inv_2  = self.inv_routine(K_bb_2)
 
 					cl1 = np.dot(K_bb_inv_1, np.dot(self.P_bl, pcl_1))
 					cl2 = np.dot(K_bb_inv_2, np.dot(self.P_bl, pcl_2))
